@@ -1,0 +1,187 @@
+我们为一款智能锁产品编写一个定制的程序，存储和管理指纹和人脸识别数据到EVASH Ultra EEPROM中。
+
+详细需求
+存储用户数据：包括指纹模板、人脸模板、用户ID等信息。
+数据加密：存储的数据需要加密，确保安全性。
+读写保护：部分数据需要读写保护。
+日志记录：记录每次访问的日志，包括时间和用户ID。
+假设条件
+EEPROM规格：EVASH Ultra EEPROM，I2C接口，256KB存储容量
+单片机：Arduino平台（如Arduino Uno）
+编程语言：C++
+程序实现
+所需库
+使用Wire库（用于I2C通信）和RTClib库（用于实时时钟）。
+
+cpp
+复制代码
+#include <Wire.h>
+#include <RTClib.h>  // 用于获取日期和时间
+
+// EEPROM I2C地址
+#define EEPROM_ADDRESS 0x50
+
+// RTC初始化
+RTC_DS3231 rtc;
+
+// 用户数据结构体
+struct UserData {
+  uint32_t userID;
+  char fingerprintTemplate[128];  // 指纹模板
+  char faceTemplate[512];         // 人脸模板
+};
+
+// 日志数据结构体
+struct LogData {
+  uint32_t userID;
+  char timestamp[20]; // 格式: YYYY-MM-DD HH:MM:SS
+};
+
+// 初始化I2C和RTC
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+}
+
+// 写数据到EEPROM
+void writeEEPROM(int deviceaddress, unsigned int eeaddress, byte* data, size_t dataLength) {
+  Wire.beginTransmission(deviceaddress);
+  Wire.write((int)(eeaddress >> 8));   // 高字节地址
+  Wire.write((int)(eeaddress & 0xFF)); // 低字节地址
+  
+  for (size_t i = 0; i < dataLength; i++) {
+    Wire.write(data[i]);
+  }
+
+  Wire.endTransmission();
+  delay(5); // 写操作延迟
+}
+
+// 从EEPROM读取数据
+void readEEPROM(int deviceaddress, unsigned int eeaddress, byte* buffer, size_t bufferLength) {
+  Wire.beginTransmission(deviceaddress);
+  Wire.write((int)(eeaddress >> 8));   // 高字节地址
+  Wire.write((int)(eeaddress & 0xFF)); // 低字节地址
+  Wire.endTransmission();
+
+  Wire.requestFrom(deviceaddress, bufferLength);
+
+  for (size_t i = 0; i < bufferLength; i++) {
+    if (Wire.available()) {
+      buffer[i] = Wire.read();
+    }
+  }
+}
+
+// 数据加密示例
+void encryptData(byte* data, size_t dataLength) {
+  for (size_t i = 0; i < dataLength; i++) {
+    data[i] ^= 0xAA;  // 简单的异或加密示例
+  }
+}
+
+// 数据解密示例
+void decryptData(byte* data, size_t dataLength) {
+  for (size_t i = 0; i < dataLength; i++) {
+    data[i] ^= 0xAA;  // 简单的异或解密示例
+  }
+}
+
+// 获取当前时间戳
+void getCurrentTimestamp(char* buffer, size_t bufferSize) {
+  DateTime now = rtc.now();
+  snprintf(buffer, bufferSize, "%04d-%02d-%02d %02d:%02d:%02d",
+           now.year(), now.month(), now.day(),
+           now.hour(), now.minute(), now.second());
+}
+
+// 打印用户数据
+void printUserData(UserData& user) {
+  Serial.print("User ID: ");
+  Serial.println(user.userID);
+  Serial.print("Fingerprint Template: ");
+  Serial.println(user.fingerprintTemplate);
+  Serial.print("Face Template: ");
+  Serial.println(user.faceTemplate);
+}
+
+// 打印日志数据
+void printLogData(LogData& log) {
+  Serial.print("User ID: ");
+  Serial.println(log.userID);
+  Serial.print("Timestamp: ");
+  Serial.println(log.timestamp);
+}
+
+void loop() {
+  // 创建用户数据示例
+  UserData user = {12345, "fingerprint_data", "face_data"};
+
+  // 加密数据
+  encryptData((byte*)&user, sizeof(UserData));
+
+  // 写入数据到EEPROM
+  writeEEPROM(EEPROM_ADDRESS, 0x0000, (byte*)&user, sizeof(UserData));
+  Serial.println("User data written to EEPROM.");
+
+  // 读取数据
+  UserData readUser;
+  readEEPROM(EEPROM_ADDRESS, 0x0000, (byte*)&readUser, sizeof(UserData));
+
+  // 解密数据
+  decryptData((byte*)&readUser, sizeof(UserData));
+
+  // 打印读取到的用户数据
+  printUserData(readUser);
+
+  // 创建日志数据示例
+  LogData log;
+  log.userID = user.userID;
+  getCurrentTimestamp(log.timestamp, sizeof(log.timestamp));
+
+  // 写入日志数据到EEPROM
+  writeEEPROM(EEPROM_ADDRESS, sizeof(UserData), (byte*)&log, sizeof(LogData));
+  Serial.println("Log data written to EEPROM.");
+
+  // 读取日志数据
+  LogData readLog;
+  readEEPROM(EEPROM_ADDRESS, sizeof(UserData), (byte*)&readLog, sizeof(LogData));
+
+  // 打印读取到的日志数据
+  printLogData(readLog);
+
+  delay(5000); // 5秒钟延迟
+}
+代码说明
+RTC初始化：在setup()函数中初始化RTC（实时时钟）模块，用于获取当前日期和时间。
+用户数据结构：定义UserData结构体来存储用户信息，包括指纹模板和人脸模板。
+日志数据结构：定义LogData结构体来存储日志信息，包括用户ID和时间戳。
+写入和读取数据：writeEEPROM()和readEEPROM()函数用于将用户数据和日志数据写入和读取EEPROM。
+数据加密和解密：encryptData()和decryptData()函数用于加密和解密用户数据。
+获取当前时间戳：getCurrentTimestamp()函数用于获取当前时间，并格式化为字符串。
+打印用户数据和日志数据：printUserData()和printLogData()函数用于打印用户数据和日志数据。
+主循环：在loop()函数中，创建用户数据和日志数据示例，进行加密并写入EEPROM，然后读取并解密数据，最后打印读取到的用户数据和日志数据。
+进一步扩展
+多用户管理：实现对多个用户的管理，分配不同的存储区域。
+高级加密：使用更高级的加密算法（如AES）来增强数据安全性。
+更多日志信息：记录更多的日志信息，如操作类型（读/写）、操作结果（成功/失败）等。
+读写保护：实现对敏感数据的读写保护，防止未经授权的访问。
+这个示例程序提供了与EVASH Ultra EEPROM交互的基本框架，并实现了智能锁常见的数据存储和管理需求。实际应用中可以根据具体需求进行调整和扩展。
+
+EVASH 官网
+www.evashtec.com
+
+规格书百度云下载
+链接: https://pan.baidu.com/s/1IVMXhjZQSH4MUZM6pl_40w?pwd=rn3v 提取码: rn3v 
+
+EVASH EEPROM 官方淘宝店
+https://shop260382949.taobao.com/?spm=pc_detail.29232929/evo365560b447259.shop_block.dentershop.7eb47dd659UOm8
