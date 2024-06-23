@@ -1,0 +1,171 @@
+Software Configuration
+Required Libraries:
+Wire.h for I2C communication.
+
+ESP8266WiFi.h for Wi-Fi functionality.
+
+Sample Code:
+cpp
+
+复制代码
+
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+
+#define SDA_PIN 4 // GPIO4
+#define SCL_PIN 5 // GPIO5
+#define EEPROM_ADDRESS 0x50 // Default I2C address for EV24C512A
+
+void setup() {
+  // Initialize I2C communication
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  // Initialize Serial for debugging
+  Serial.begin(115200);
+  
+  // Initialize Wi-Fi
+  WiFi.begin("yourSSID", "yourPASSWORD");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+  
+  // Example: Write data to EEPROM
+  writeEEPROM(0x00, 0x42);
+  
+  // Example: Read data from EEPROM
+  byte value = readEEPROM(0x00);
+  Serial.print("Read value: ");
+  Serial.println(value, HEX);
+}
+
+void loop() {
+  // Your main code
+}
+
+void writeEEPROM(int address, byte data) {
+  Wire.beginTransmission(EEPROM_ADDRESS);
+  Wire.write((int)(address >> 8)); // MSB
+  Wire.write((int)(address & 0xFF)); // LSB
+  Wire.write(data);
+  Wire.endTransmission();
+  delay(5); // EEPROM write delay
+}
+
+byte readEEPROM(int address) {
+  Wire.beginTransmission(EEPROM_ADDRESS);
+  Wire.write((int)(address >> 8)); // MSB
+  Wire.write((int)(address & 0xFF)); // LSB
+  Wire.endTransmission();
+  Wire.requestFrom(EEPROM_ADDRESS, 1);
+  if (Wire.available()) {
+    return Wire.read();
+  }
+  return 0xFF; // Return 0xFF if nothing is read
+}
+
+Explanation:
+Wire.begin(SDA_PIN, SCL_PIN) initializes the I2C communication on the specified GPIO pins.
+
+WiFi.begin("yourSSID", "yourPASSWORD") connects the ESP8266 to your Wi-Fi network.
+
+The writeEEPROM and readEEPROM functions handle writing to and reading from the EEPROM.
+
+Ensure you have the ESP8266 and Wire libraries installed in your Arduino IDE. Adjust the GPIO pins if needed, depending on your specific ESP8266 module and pin configuration (Espressif) (Espressif).
+
+Schematic Diagram:
+Components:
+ESP8266 (ESP-12E module)
+
+EV24C512A EEPROM
+
+Pull-up Resistors for I2C lines (4.7kΩ)
+
+Capacitor for power supply stabilization (0.1μF)
+
+Schematic Connections:
+scss
+
+复制代码
+
+                       +3.3V
+                         |
+                        [ ]
+                      0.1μF
+                         |
+                         +-------+
+                         |       |
+                       (Vcc)    (GND)
+                         |       |
++3.3V----->Vcc   GND----->GND
+     |                      |
+    [4.7kΩ]                 |
+     |                      |
+     +-------+              |
+             |              |
+            (SCL)           |
+             |              |
+            [4.7kΩ]         |
+             |              |
+            (SDA)           |
+             |              |
+             +--------------+
+                         |
+                         |
+                       (A0) --+-- (A1) --+-- (A2)
+                         |              |
+                       (GND)          (GND)
+                         
+              +-------------------+
+              | EV24C512A EEPROM  |
+              +-------------------+
+                          |
+                         (WP)
+                          |
+                         (GND)
+
+Detailed Pin Connections:
+EV24C512A to ESP8266:
+
+Vcc to ESP8266 Vcc (3.3V)
+
+GND to ESP8266 GND
+
+SDA to ESP8266 GPIO4
+
+SCL to ESP8266 GPIO5
+
+A0, A1, A2 to GND (Setting default address)
+
+WP to GND (Disabling write protection)
+
+Pull-up Resistors:
+
+SDA to 3.3V via a 4.7kΩ resistor
+
+SCL to 3.3V via a 4.7kΩ resistor
+
+Capacitor for Power Supply Stabilization:
+
+Connect a 0.1μF capacitor between Vcc and GND near the EEPROM for power supply noise filtering.
+
+Notes:
+The pull-up resistors are necessary for proper I2C communication.
+
+Ensure the power supply is stable and within the voltage specifications of both the EEPROM and ESP8266.
+
+Double-check the connections to avoid damage to the components.
+
+EVASH 官网
+
+www.evashtec.com
+
+规格书百度云下载
+
+链接: https://pan.baidu.com/s/1IVMXhjZQSH4MUZM6pl_40w?pwd=rn3v 提取码: rn3v 
+
+EVASH EEPROM 官方淘宝店
+
+https://shop260382949.taobao.com/?spm=pc_detail.29232929/evo365560b447259.shop_block.dentershop.7eb47dd659UOm8
+
