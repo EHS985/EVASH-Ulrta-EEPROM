@@ -1,0 +1,95 @@
+EVASH Ultra EEPROM 开发板使用说明书
+简介
+欢迎使用EVASH Ultra EEPROM开发板使用说明书。本说明书将为您提供使用搭载EV24C256A芯片的EVASH Ultra EEPROM开发板的全面指导。该开发板设计用于帮助您评估和开发基于EVASH EEPROM技术的应用。
+
+开发板概述
+EVASH Ultra EEPROM开发板配备了EV24C256A芯片，该芯片是一款256Kb的EEPROM，具有I²C接口。开发板包含所有必要的组件，用于与微控制器和其他数字系统接口，非常适合开发、测试和原型设计。
+
+板卡布局
+正面
+
+R1, R2, R3: 用于I²C通信线的上拉电阻。
+C1, C2: 用于稳定电源的去耦电容。
+U1: EV24C256A EEPROM芯片。
+WP: 写保护引脚。
+SCL: I²C时钟线。
+SDA: I²C数据线。
+背面
+
+A0, A1, A2: 用于配置I²C地址的地址引脚。
+GND: 接地引脚。
+入门指南
+给开发板供电
+EVASH Ultra EEPROM开发板的工作电压范围为1.7V至5.5V。将VDD引脚连接到此范围内的电源，并将GND引脚接地。
+
+连接到微控制器
+要将开发板与微控制器连接，请按以下方式连接引脚：
+
+SDA: 连接到微控制器的I²C数据线。
+SCL: 连接到微控制器的I²C时钟线。
+GND: 连接到微控制器电源的地。
+VDD: 连接到与微控制器相同的电源。
+设置I²C地址
+EV24C256A EEPROM支持多个I²C地址，可以使用A0、A1和A2引脚进行配置。将这些引脚连接到VDD或GND以设置所需的地址。
+
+写保护
+WP（写保护）引脚可用于保护EEPROM的内容不被修改。将此引脚连接到VDD以启用写保护，或连接到GND以禁用写保护。
+
+测试开发板
+所需材料
+微控制器（如Arduino、STM32等）
+I²C连接线
+电源（1.7V至5.5V）
+开发环境（如Arduino IDE，STM32CubeIDE）
+示例代码
+以下是使用Arduino读取和写入EV24C256A EEPROM的示例代码：
+
+cpp
+复制代码
+#include <Wire.h>
+
+#define EEPROM_ADDRESS 0x50
+
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+
+  // 写数据到EEPROM
+  Wire.beginTransmission(EEPROM_ADDRESS);
+  Wire.write(0x00); // 存储地址
+  Wire.write('H'); // 数据
+  Wire.write('e');
+  Wire.write('l');
+  Wire.write('l');
+  Wire.write('o');
+  Wire.endTransmission();
+  delay(10); // 等待EEPROM写入周期完成
+
+  // 从EEPROM读取数据
+  Wire.beginTransmission(EEPROM_ADDRESS);
+  Wire.write(0x00); // 存储地址
+  Wire.endTransmission();
+  
+  Wire.requestFrom(EEPROM_ADDRESS, 5);
+  while (Wire.available()) {
+    char c = Wire.read();
+    Serial.print(c); // 将数据打印到串行监视器
+  }
+}
+
+void loop() {
+  // 在循环中不执行任何操作
+}
+测试步骤
+设置硬件: 按照连接部分的描述，将开发板与微控制器连接。
+为板卡供电: 确保电源连接正确，电压在规定范围内。
+加载示例代码: 将提供的示例代码上传到您的微控制器。
+监视输出: 打开串行监视器（在Arduino IDE中）查看从EEPROM读取的数据。
+故障排除
+无数据输出: 确保所有连接牢固且正确。验证I²C地址设置正确并与代码匹配。
+写入错误: 检查WP引脚状态。如果启用了写保护，请将其连接到GND以禁用。
+结论
+EVASH Ultra EEPROM开发板是一个强大的工具，用于开发和测试EEPROM应用。本指南提供了入门的基本步骤，包括供电、连接和运行基本测试。有关更详细的信息，请访问我们的网址 evash.top。
+
+如需进一步帮助，请联系我们的技术支持团队。
+
