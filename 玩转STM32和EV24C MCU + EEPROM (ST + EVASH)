@@ -1,0 +1,101 @@
+简介
+本指南旨在帮助您轻松上手使用STM32微控制器和EVASH的EV24C系列EEPROM芯片。通过本教程，您将学习如何在实际项目中使用这些组件，逐步掌握从基本到高级的操作技巧。
+必备材料
+STM32开发板（如STM32F103C8T6）
+EVASH EV24C256A EEPROM开发套件
+连接线（杜邦线）
+基本电子工具（烙铁、万用表等）
+
+开发板与EEPROM连接
+将STM32开发板与EV24C256A EEPROM开发板按以下方式连接：
+VDD (开发板) 连接 VDD (EEPROM)
+GND (开发板) 连接 GND (EEPROM)
+SCL (开发板) 连接 SCL (EEPROM)
+SDA (开发板) 连接 SDA (EEPROM)
+
+基本操作
+1. 初始化I2C
+在STM32上初始化I2C接口，代码如下：
+c
+复制代码
+
+#include "stm32f1xx_hal.h"
+I2C_HandleTypeDef hi2c1;
+void MX_I2C1_Init(void)
+{
+    hi2c1.Instance = I2C1;
+    hi2c1.Init.ClockSpeed = 100000;
+    hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+    hi2c1.Init.OwnAddress1 = 0;
+    hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    hi2c1.Init.OwnAddress2 = 0;
+    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+    {
+        // Initialization Error
+        Error_Handler();
+    }
+}
+
+2. 读写EEPROM
+读取和写入EEPROM的函数：
+c
+复制代码
+
+HAL_StatusTypeDef EEPROM_Write(uint16_t MemAddress, uint8_t *pData, uint16_t Size)
+{
+    return HAL_I2C_Mem_Write(&hi2c1, EEPROM_ADDRESS, MemAddress, I2C_MEMADD_SIZE_16BIT, pData, Size, HAL_MAX_DELAY);
+}
+HAL_StatusTypeDef EEPROM_Read(uint16_t MemAddress, uint8_t *pData, uint16_t Size)
+{
+    return HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDRESS, MemAddress, I2C_MEMADD_SIZE_16BIT, pData, Size, HAL_MAX_DELAY);
+}
+
+进阶操作
+1. 页写操作
+EEPROM页写功能允许一次写入多字节数据，提高写入效率。
+c
+复制代码
+
+#define EEPROM_PAGE_SIZE 64
+HAL_StatusTypeDef EEPROM_PageWrite(uint16_t MemAddress, uint8_t *pData, uint16_t Size)
+{
+    uint16_t remaining = Size;
+    while (remaining > 0)
+    {
+        uint16_t write_size = remaining > EEPROM_PAGE_SIZE ? EEPROM_PAGE_SIZE : remaining;
+        if (HAL_I2C_Mem_Write(&hi2c1, EEPROM_ADDRESS, MemAddress, I2C_MEMADD_SIZE_16BIT, pData, write_size, HAL_MAX_DELAY) != HAL_OK)
+        {
+            return HAL_ERROR;
+        }
+        remaining -= write_size;
+        pData += write_size;
+        MemAddress += write_size;
+        HAL_Delay(5); // 延时以确保写入完成
+    }
+    return HAL_OK;
+}
+
+2. 自动地址递增读取
+使用自动地址递增功能可连续读取EEPROM中的数据。
+c
+复制代码
+
+HAL_StatusTypeDef EEPROM_SequentialRead(uint16_t MemAddress, uint8_t *pData, uint16_t Size)
+{
+    return HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDRESS, MemAddress, I2C_MEMADD_SIZE_16BIT, pData, Size, HAL_MAX_DELAY);
+}
+
+淘宝地址
+如需购买相关产品，请访问我们的淘宝店铺 EVASH 淘宝店铺。
+我们现推出特别活动，免费赠送EVASH Ultra EEPROM开发套件，包括软件代码。前500套免费提供！
+如需领取，请提供：
+公司名称
+项目名称
+联系人
+
+期待您的回复！
+EVASH团队
+访问我们的网站 evash.top 和淘宝店铺 链接。
