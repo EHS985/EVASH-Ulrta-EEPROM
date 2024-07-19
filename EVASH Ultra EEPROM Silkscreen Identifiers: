@@ -1,0 +1,33 @@
+EVASH Ultra EEPROM Silkscreen Identifiers:
+
+EV24C02A: Silkscreen BL02, 2Kbit EEPROM
+EV24C04A: Silkscreen BL04, 4Kbit EEPROM
+EV24C08A: Silkscreen BL08, 8Kbit EEPROM
+EV24C16A: Silkscreen BL16, 16Kbit EEPROM
+EV24C32A: Silkscreen BL32, 32Kbit EEPROM
+EV24C64A: Silkscreen BL64, 64Kbit EEPROM
+EV24C128A: Silkscreen BL28, 128Kbit EEPROM
+EV24C256A: Silkscreen BL56, 256Kbit EEPROM
+EV24C512A: Silkscreen BL12, 512Kbit EEPROM
+Explanation of Silkscreen Codes:
+
+BL: Packaging House Identifier
+XX: EEPROM Capacity
+YYWW: Year and Week of Manufacture
+Japanese Version (日本語)
+EVASH Ultra EEPROM シルクスクリーン識別子:
+
+EV24C02A: シルクスクリーン BL02、2Kbit EEPROM
+EV24C04A: シルクスクリーン BL04、4Kbit EEPROM
+EV24C08A: シルクスクリーン BL08、8Kbit EEPROM
+EV24C16A: シルクスクリーン BL16、16Kbit EEPROM
+EV24C32A: シルクスクリーン BL32、32Kbit EEPROM
+EV24C64A: シルクスクリーン BL64、64Kbit EEPROM
+EV24C128A: シルクスクリーン BL28、128Kbit EEPROM
+EV24C256A: シルクスクリーン BL56、256Kbit EEPROM
+EV24C512A: シルクスクリーン BL12、512Kbit EEPROM
+シルクスクリーンコードの説明：
+
+BL: パッケージングハウス識別子
+XX: EEPROM 容量
+YYWW: 製造年と週
